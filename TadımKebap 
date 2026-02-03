@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tadım Kebap - Hızlı Sipariş</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; padding-bottom: 100px; }
+        h1, h2, h3 { font-family: 'Oswald', sans-serif; }
+        .discount-badge {
+            background: linear-gradient(135deg, #d62828 0%, #c1121f 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(214, 40, 40, 0.3);
+        }
+        .add-btn {
+            background-color: #25D366; /* WhatsApp Green */
+            transition: all 0.2s;
+        }
+        .add-btn:active { transform: scale(0.95); }
+        .floating-cart {
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.95);
+        }
+        .item-card {
+            transition: transform 0.2s;
+        }
+        .item-card:hover {
+            transform: translateY(-2px);
+        }
+        /* Kategori Butonları için yatay kaydırma gizleme */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-[#d62828] text-white p-4 sticky top-0 z-50 shadow-lg rounded-b-3xl">
+        <div class="flex justify-between items-center max-w-lg mx-auto">
+            <div>
+                <h1 class="text-2xl font-bold tracking-wide">🔥 TADIM KEBAP</h1>
+                <p class="text-xs opacity-90"><i class="fas fa-map-marker-alt"></i> Gazanfer Bilge Cad. No:33</p>
+                <a href="tel:02624542974" class="text-xs font-bold underline mt-1 block"><i class="fas fa-phone"></i> 0262 454 29 74</a>
+            </div>
+            <div class="text-right">
+                <div class="text-xs bg-white text-[#d62828] px-2 py-1 rounded font-bold inline-block animate-pulse">
+                    %15 İNDİRİM
+                </div>
+                <p class="text-[10px] mt-1">Komisyonsuz Fiyatlar</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Bilgi Kutusu -->
+    <div class="max-w-lg mx-auto p-4">
+        <div class="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 rounded shadow-sm text-sm mb-6">
+            <p class="font-bold"><i class="fab fa-whatsapp"></i> WhatsApp Sipariş Hattı</p>
+            <p>Uygulamalar komisyon alıyor. Buradan direkt dükkan hattına yazarak hem <strong>daha ucuza yiyin</strong> hem de bize destek olun. 🤝</p>
+        </div>
+
+        <!-- KATEGORİ FİLTRELERİ -->
+        <div class="flex overflow-x-auto gap-2 mb-6 pb-2 no-scrollbar" id="categoryFilters">
+            <button onclick="filterCategory('all')" class="px-4 py-2 bg-gray-800 text-white rounded-full text-sm font-bold whitespace-nowrap shadow hover:bg-gray-700">Tümü</button>
+            <button onclick="filterCategory('firsat')" class="px-4 py-2 bg-yellow-500 text-white rounded-full text-sm font-bold whitespace-nowrap shadow hover:bg-yellow-600">🔥 Fırsatlar</button>
+            <button onclick="filterCategory('firin')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-bold whitespace-nowrap shadow hover:bg-gray-100">Fırın</button>
+            <button onclick="filterCategory('kebap')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-bold whitespace-nowrap shadow hover:bg-gray-100">Kebap</button>
+            <button onclick="filterCategory('doner')" class="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-bold whitespace-nowrap shadow hover:bg-gray-100">Döner</button>
+        </div>
+
+        <!-- ÜRÜN LİSTESİ -->
+        <div id="menu-container" class="space-y-4">
+            <!-- JS ile doldurulacak -->
+        </div>
+
+    </div>
+
+    <!-- FLOAT CART (Yapışkan Sepet) -->
+    <div id="cart-bar" class="fixed bottom-0 left-0 w-full floating-cart border-t border-gray-200 p-4 z-50 hidden">
+        <div class="max-w-lg mx-auto flex justify-between items-center">
+            <div>
+                <p class="text-xs text-gray-500">Toplam Tutar</p>
+                <p class="text-xl font-bold text-[#d62828]"><span id="total-price">0</span>₺</p>
+            </div>
+            <button onclick="sendOrderToWhatsapp()" class="bg-[#25D366] hover:bg-[#128C7E] text-white px-6 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2 transform transition active:scale-95">
+                <i class="fab fa-whatsapp text-xl"></i>
+                Siparişi Tamamla
+            </button>
+        </div>
+        <div class="max-w-lg mx-auto mt-2 text-center">
+            <p class="text-[10px] text-gray-400">Yemeksepeti fiyatına göre <span id="saved-amount" class="text-green-600 font-bold">0₺</span> kâr ettiniz!</p>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Fiyat Listesi (Senin verdiğin stratejiye göre ayarlandı)
+        const menuItems = [
+            // FIRSATLAR
+            { id: 101, name: "10'lu Lahmacun Menü", category: "firsat", appPrice: 1200, price: 1000, desc: "10 Adet Lahmacun + Yeşillik", popular: true },
+            { id: 102, name: "Aile Paketi (Kebap)", category: "firsat", appPrice: 1500, price: 1350, desc: "Karışık Kebap + 2 Lahmacun + İçecek", popular: true },
+
+            // FIRIN
+            { id: 1, name: "Lahmacun", category: "firin", appPrice: 120, price: 100, desc: "Çıtır çıtır, bol malzemeli." },
+            { id: 2, name: "Kaşarlı Pide", category: "firin", appPrice: 250, price: 235, desc: "Bol kaşarlı." },
+            { id: 3, name: "Kıymalı Pide", category: "firin", appPrice: 250, price: 235, desc: "Özel kıyma harcı ile." },
+            { id: 4, name: "Kuşbaşılı Pide", category: "firin", appPrice: 280, price: 265, desc: "Dana kuşbaşı etli." },
+            { id: 5, name: "Karışık Pide", category: "firin", appPrice: 280, price: 265, desc: "Kuşbaşı, kıyma, kaşar." },
+            { id: 6, name: "Kavurmalı Pide", category: "firin", appPrice: 300, price: 285, desc: "Rize kavurmalı." },
+            { id: 7, name: "Pastırmalı Pide", category: "firin", appPrice: 400, price: 400, desc: "Orijinal Kayseri pastırması. (İkramlı)" },
+            
+            // DÖNER
+            { id: 8, name: "Et Döner Dürüm", category: "doner", appPrice: 250, price: 230, desc: "100gr Yaprak döner." },
+            { id: 9, name: "Sade Döner (Porsiyon)", category: "doner", appPrice: 400, price: 370, desc: "Pilav ve patates ile." },
+            { id: 10, name: "İskender", category: "doner", appPrice: 400, price: 370, desc: "Bol tereyağlı." },
+            { id: 11, name: "Patos Döner", category: "doner", appPrice: 180, price: 160, desc: "Ekmek arası patates ve döner." },
+
+            // KEBAP
+            { id: 12, name: "Adana Dürüm", category: "kebap", appPrice: 300, price: 270, desc: "Zırh kıyması, özel lavaş." },
+            { id: 13, name: "Urfa Dürüm", category: "kebap", appPrice: 300, price: 270, desc: "Acısız zırh kıyması." },
+            { id: 14, name: "Adana Kebap (Porsiyon)", category: "kebap", appPrice: 400, price: 370, desc: "Tabakta; pilav, köz domates ile." },
+            { id: 15, name: "Urfa Kebap (Porsiyon)", category: "kebap", appPrice: 400, price: 370, desc: "" },
+            { id: 16, name: "Beyti Sarma", category: "kebap", appPrice: 420, price: 390, desc: "Yoğurtlu, soslu." },
+            { id: 17, name: "Karışık Kebap", category: "kebap", appPrice: 900, price: 900, desc: "Adana, Urfa, Şiş, Döner. (İkramlı)", noDiscount: true }
+        ];
+
+        let cart = {};
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMenu('all');
+        });
+
+        function renderMenu(category) {
+            const container = document.getElementById('menu-container');
+            container.innerHTML = '';
+
+            const filteredItems = category === 'all' 
+                ? menuItems 
+                : menuItems.filter(item => item.category === category);
+
+            filteredItems.forEach(item => {
+                const count = cart[item.id] ? cart[item.id].count : 0;
+                const discountPercent = item.noDiscount ? 0 : Math.round(((item.appPrice - item.price) / item.appPrice) * 100);
+
+                const html = `
+                <div class="item-card bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative">
+                    ${discountPercent > 0 ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-lg">Sepette %${discountPercent} İndirim</div>` : ''}
+                    
+                    <div class="flex justify-between items-start">
+                        <div class="w-2/3">
+                            <h3 class="font-bold text-lg text-gray-800">${item.name}</h3>
+                            <p class="text-xs text-gray-500 mb-2 line-clamp-2">${item.desc}</p>
+                            <div class="flex items-center gap-2">
+                                <span class="text-green-600 font-bold text-lg">${item.price}₺</span>
+                                ${!item.noDiscount ? `<span class="text-gray-400 text-sm line-through decoration-red-500">${item.appPrice}₺</span>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="w-1/3 flex flex-col items-end justify-center h-full pt-2">
+                             ${count === 0 ? 
+                                `<button onclick="addToCart(${item.id})" class="add-btn bg-gray-100 hover:bg-green-100 text-green-700 font-bold py-2 px-4 rounded-xl text-sm border border-green-200">
+                                    <i class="fas fa-plus"></i> Ekle
+                                 </button>` : 
+                                `<div class="flex items-center bg-green-50 rounded-lg border border-green-200">
+                                    <button onclick="removeFromCart(${item.id})" class="px-3 py-1 text-green-700 font-bold text-lg">-</button>
+                                    <span class="px-1 font-bold text-gray-800">${count}</span>
+                                    <button onclick="addToCart(${item.id})" class="px-3 py-1 text-green-700 font-bold text-lg">+</button>
+                                 </div>`
+                             }
+                        </div>
+                    </div>
+                </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function addToCart(id) {
+            if (!cart[id]) {
+                cart[id] = { ...menuItems.find(i => i.id === id), count: 0 };
+            }
+            cart[id].count++;
+            updateCartUI();
+        }
+
+        function removeFromCart(id) {
+            if (cart[id]) {
+                cart[id].count--;
+                if (cart[id].count <= 0) {
+                    delete cart[id];
+                }
+                updateCartUI();
+            }
+        }
+
+        function updateCartUI() {
+            const currentFilterBtn = document.querySelector('#categoryFilters button.bg-gray-800');
+            // Buton textine göre filtreyi bul (basit yöntem)
+            let currentFilter = 'all';
+            if (currentFilterBtn) {
+                const text = currentFilterBtn.innerText.toLowerCase();
+                if(text.includes('fırsat')) currentFilter = 'firsat';
+                else if(text.includes('fırın')) currentFilter = 'firin';
+                else if(text.includes('kebap')) currentFilter = 'kebap';
+                else if(text.includes('döner')) currentFilter = 'doner';
+            }
+            renderMenu(currentFilter);
+
+            let total = 0;
+            let totalAppPrice = 0;
+            let itemCount = 0;
+
+            Object.values(cart).forEach(item => {
+                total += item.price * item.count;
+                totalAppPrice += item.appPrice * item.count;
+                itemCount += item.count;
+            });
+
+            const saved = totalAppPrice - total;
+            document.getElementById('total-price').innerText = total;
+            document.getElementById('saved-amount').innerText = saved;
+
+            const cartBar = document.getElementById('cart-bar');
+            if (itemCount > 0) {
+                cartBar.classList.remove('hidden');
+                document.body.style.paddingBottom = "120px";
+            } else {
+                cartBar.classList.add('hidden');
+                document.body.style.paddingBottom = "20px";
+            }
+        }
+
+        function filterCategory(cat) {
+            const buttons = document.querySelectorAll('#categoryFilters button');
+            buttons.forEach(btn => {
+                const text = btn.innerText.toLowerCase();
+                let isActive = false;
+                if(cat === 'all' && text === 'tümü') isActive = true;
+                if(cat === 'firsat' && text.includes('fırsat')) isActive = true;
+                if(cat === 'firin' && text === 'fırın') isActive = true;
+                if(cat === 'kebap' && text === 'kebap') isActive = true;
+                if(cat === 'doner' && text === 'döner') isActive = true;
+
+                if(isActive) {
+                    btn.className = "px-4 py-2 bg-gray-800 text-white rounded-full text-sm font-bold whitespace-nowrap shadow transition";
+                } else {
+                    btn.className = "px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-bold whitespace-nowrap shadow text-gray-600 hover:bg-gray-100 transition";
+                }
+            });
+            renderMenu(cat);
+        }
+
+        function sendOrderToWhatsapp() {
+            // TADIM KEBAP RESMİ HATTI
+            const phone = "902624542974"; 
+
+            let message = "*Sipariş Detayı (QR Menü)*\n\n";
+            let total = 0;
+
+            Object.values(cart).forEach(item => {
+                message += `▪ ${item.count} x ${item.name} (${item.price * item.count}₺)\n`;
+                total += item.price * item.count;
+            });
+
+            message += `\n*TOPLAM: ${total} TL*\n`;
+            message += `------------------\n`;
+            message += `📍 *Adres:* (Konum atınız veya yazınız)\n`;
+            message += `💳 *Ödeme:* Nakit / Kart\n\n`;
+            message += `_Hayırlı işler, kolay gelsin!_`;
+
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
+
+
